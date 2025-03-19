@@ -284,3 +284,319 @@ function showToast() {
 function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+ // Get the form element
+ const addMedicationForm = document.getElementById('addMedicationForm');
+ 
+ // Add event listener for form submission
+ addMedicationForm.addEventListener('submit', function(event) {
+     // Prevent the default form submission
+     event.preventDefault();
+     
+     // Get form input values
+     const medicationName = document.getElementById('newMedicationName').value.trim();
+     const medicationStock = parseInt(document.getElementById('newMedicationStock').value);
+     const medicationThreshold = parseInt(document.getElementById('newMedicationThreshold').value);
+     const medicationExpiry = document.getElementById('newMedicationExpiry').value;
+     
+     // Validate inputs
+     if (!medicationName || isNaN(medicationStock) || isNaN(medicationThreshold) || !medicationExpiry) {
+         alert('Please fill in all fields correctly.');
+         return;
+     }
+     
+     // Create a medication object
+     const medicationData = {
+         name: medicationName,
+         stock: medicationStock,
+         threshold: medicationThreshold,
+         expiryDate: medicationExpiry,
+         dateAdded: new Date().toISOString()
+     };
+     
+     // Get existing medications from localStorage or initialize empty array
+     let medications = [];
+     try {
+         const storedMedications = localStorage.getItem('medications');
+         medications = storedMedications ? JSON.parse(storedMedications) : [];
+         
+         // Ensure medications is an array
+         if (!Array.isArray(medications)) {
+             medications = [];
+         }
+     } catch (error) {
+         console.error('Error reading from localStorage:', error);
+         medications = [];
+     }
+     
+     // Add new medication to the array
+     medications.push(medicationData);
+     
+     // Save updated medications array back to localStorage
+     try {
+         localStorage.setItem('medications', JSON.stringify(medications));
+         console.log('Medication saved successfully:', medicationData);
+         console.log('Current medications in storage:', medications);
+         
+         // Show success message
+         alert('Medication added successfully!');
+         
+         // Reset the form
+         addMedicationForm.reset();
+         
+         // Update medication list if displayed on the same page
+         updateMedicationList();
+     } catch (error) {
+         console.error('Error saving to localStorage:', error);
+         alert('Error saving medication. Please try again.');
+     }
+ });
+ 
+ // Initial load of medications list
+ updateMedicationList();
+ 
+ // Add a test button to verify storage (for debugging)
+ const formActions = document.querySelector('.form-actions');
+ if (formActions) {
+     const testButton = document.createElement('button');
+     testButton.type = 'button';
+     testButton.className = 'btn-test';
+     testButton.textContent = 'Test Storage';
+     testButton.style.marginLeft = '10px';
+     
+     testButton.addEventListener('click', function() {
+         const medications = JSON.parse(localStorage.getItem('medications')) || [];
+         console.log('Current medications in storage:', medications);
+         alert(`Found ${medications.length} medications in storage. Check console for details.`);
+     });
+     
+     formActions.appendChild(testButton);
+ }
+});
+
+// Function to display medications
+function updateMedicationList() {
+ // Look for existing medication list element
+ let medicationListElement = document.getElementById('medicationList');
+ 
+ // If it doesn't exist, create one
+ if (!medicationListElement) {
+     const formContainer = document.querySelector('.add-medication-form');
+     if (formContainer) {
+         medicationListElement = document.createElement('div');
+         medicationListElement.id = 'medicationList';
+         medicationListElement.className = 'medication-list';
+         
+         const listTitle = document.createElement('h3');
+         listTitle.textContent = 'Current Medications';
+         medicationListElement.appendChild(listTitle);
+         
+         formContainer.parentNode.insertBefore(medicationListElement, formContainer.nextSibling);
+     }
+ }
+ 
+ if (medicationListElement) {
+     // Get medications from localStorage
+     let medications = [];
+     try {
+         medications = JSON.parse(localStorage.getItem('medications')) || [];
+     } catch (error) {
+         console.error('Error reading from localStorage:', error);
+         medications = [];
+     }
+     
+     // Clear current list (except the title)
+     const listTitle = medicationListElement.querySelector('h3');
+     medicationListElement.innerHTML = '';
+     if (listTitle) {
+         medicationListElement.appendChild(listTitle);
+     }
+     
+     if (medications.length === 0) {
+         const noMedsMessage = document.createElement('p');
+         noMedsMessage.textContent = 'No medications in the inventory';
+         medicationListElement.appendChild(noMedsMessage);
+         return;
+     }
+     
+     // Create a table for medications
+     const table = document.createElement('table');
+     table.className = 'medications-table';
+     
+     // Create table header
+     const tableHeader = document.createElement('thead');
+     tableHeader.innerHTML = `
+         <tr>
+             <th>Name</th>
+             <th>Stock</th>
+             <th>Threshold</th>
+             <th>Expiry Date</th>
+             <th>Actions</th>
+         </tr>
+     `;
+     table.appendChild(tableHeader);
+     
+     // Create table body
+     const tableBody = document.createElement('tbody');
+     medications.forEach((medication, index) => {
+         const row = document.createElement('tr');
+         
+         // Format expiry date
+         const expiryDate = new Date(medication.expiryDate);
+         const formattedExpiry = expiryDate.toLocaleDateString();
+         
+         // Create status class based on stock vs threshold
+         const stockStatus = medication.stock <= medication.threshold ? 'low-stock' : 'in-stock';
+         
+         row.innerHTML = `
+             <td>${medication.name}</td>
+             <td class="${stockStatus}">${medication.stock}</td>
+             <td>${medication.threshold}</td>
+             <td>${formattedExpiry}</td>
+             <td>
+                 <button class="btn-edit" data-index="${index}">Edit</button>
+                 <button class="btn-delete" data-index="${index}">Delete</button>
+             </td>
+         `;
+         
+         tableBody.appendChild(row);
+     });
+     
+     table.appendChild(tableBody);
+     medicationListElement.appendChild(table);
+     
+     // Add CSS for the table
+     const style = document.createElement('style');
+     style.textContent = `
+         .medications-table {
+             width: 100%;
+             border-collapse: collapse;
+             margin-top: 20px;
+         }
+         .medications-table th, .medications-table td {
+             padding: 8px;
+             border: 1px solid #ddd;
+             text-align: left;
+         }
+         .medications-table th {
+             background-color: #f2f2f2;
+         }
+         .low-stock {
+             color: red;
+             font-weight: bold;
+         }
+         .in-stock {
+             color: green;
+         }
+         .btn-edit, .btn-delete {
+             margin-right: 5px;
+             padding: 3px 8px;
+             cursor: pointer;
+         }
+     `;
+     document.head.appendChild(style);
+     
+     // Add event listeners for edit and delete buttons
+     attachMedicationActionListeners();
+ }
+}
+
+// Attach event listeners to medication action buttons
+function attachMedicationActionListeners() {
+ // Delete button listeners
+ document.querySelectorAll('.btn-delete').forEach(button => {
+     button.addEventListener('click', function() {
+         const index = parseInt(this.getAttribute('data-index'));
+         deleteMedication(index);
+     });
+ });
+ 
+ // Edit button listeners
+ document.querySelectorAll('.btn-edit').forEach(button => {
+     button.addEventListener('click', function() {
+         const index = parseInt(this.getAttribute('data-index'));
+         editMedication(index);
+     });
+ });
+}
+
+// Function to delete a medication
+function deleteMedication(index) {
+ if (confirm('Are you sure you want to delete this medication?')) {
+     let medications = JSON.parse(localStorage.getItem('medications')) || [];
+     medications.splice(index, 1);
+     localStorage.setItem('medications', JSON.stringify(medications));
+     updateMedicationList();
+ }
+}
+
+// Function to edit a medication
+function editMedication(index) {
+ // Get medications array
+ const medications = JSON.parse(localStorage.getItem('medications')) || [];
+ const medication = medications[index];
+ 
+ // Fill the form with existing data
+ document.getElementById('newMedicationName').value = medication.name;
+ document.getElementById('newMedicationStock').value = medication.stock;
+ document.getElementById('newMedicationThreshold').value = medication.threshold;
+ document.getElementById('newMedicationExpiry').value = medication.expiryDate;
+ 
+ // Change the form's behavior to update instead of add
+ const form = document.getElementById('addMedicationForm');
+ const submitButton = form.querySelector('.btn-submit');
+ 
+ // Store the original text
+ const originalButtonText = submitButton.textContent;
+ 
+ // Change button text
+ submitButton.textContent = 'Update Medication';
+ 
+ // Create a function to handle the update
+ const updateHandler = function(event) {
+     event.preventDefault();
+     
+     // Get updated values
+     const updatedName = document.getElementById('newMedicationName').value.trim();
+     const updatedStock = parseInt(document.getElementById('newMedicationStock').value);
+     const updatedThreshold = parseInt(document.getElementById('newMedicationThreshold').value);
+     const updatedExpiry = document.getElementById('newMedicationExpiry').value;
+     
+     // Validate inputs
+     if (!updatedName || isNaN(updatedStock) || isNaN(updatedThreshold) || !updatedExpiry) {
+         alert('Please fill in all fields correctly.');
+         return;
+     }
+     
+     // Update the medication
+     medications[index] = {
+         name: updatedName,
+         stock: updatedStock,
+         threshold: updatedThreshold,
+         expiryDate: updatedExpiry,
+         dateAdded: medication.dateAdded, // Keep the original date added
+         lastUpdated: new Date().toISOString()
+     };
+     
+     // Save back to localStorage
+     localStorage.setItem('medications', JSON.stringify(medications));
+     
+     // Reset the form and button
+     form.reset();
+     submitButton.textContent = originalButtonText;
+     
+     // Remove this special event handler
+     form.removeEventListener('submit', updateHandler);
+     
+     // Add back the original event handler (it will be re-added by the DOMContentLoaded event)
+     // but we need to manually trigger the update
+     updateMedicationList();
+     
+     alert('Medication updated successfully!');
+ };
+ 
+ // Remove any existing event listeners and add the update handler
+ form.removeEventListener('submit', updateHandler); // Just in case
+ form.addEventListener('submit', updateHandler);
+}

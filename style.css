@@ -378,3 +378,24 @@ nav {
  from { opacity: 1; }
  to { opacity: 0; }
 }
+
+.add-medication-form {
+ background-color: #f8f9fa;
+ border-radius: 8px;
+ padding: 20px;
+ margin-bottom: 20px;
+}
+
+.add-medication-form .form-row {
+ display: flex;
+ gap: 15px;
+ margin-bottom: 15px;
+}
+
+.add-medication-form .form-column {
+ flex: 1;
+}
+
+.add-medication-form .form-actions {
+ justify-content: flex-start;
+}

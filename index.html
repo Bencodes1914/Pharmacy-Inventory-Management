@@ -12,8 +12,8 @@
              <div class="header-content">
                  <div class="logo">Community Pharmacy</div>
                  <div class="user-info">
-                     <div class="user-name">Dr. Sarah Johnson</div>
-                     <div class="user-avatar">SJ</div>
+                     <div class="user-name">Days Star Pharmaceuticals.</div>
+                     <div class="user-avatar">DSP</div>
                  </div>
              </div>
          </div>
@@ -33,6 +33,42 @@
      </nav>
      
      <div class="container">
+      <div class="add-medication-form">
+       <h2 class="section-title">Add New Medication</h2>
+       <form id="addMedicationForm">
+           <div class="form-row">
+               <div class="form-column">
+                   <div class="form-group">
+                       <label class="form-label">Medication Name</label>
+                       <input type="text" id="newMedicationName" class="form-input" required>
+                   </div>
+               </div>
+               <div class="form-column">
+                   <div class="form-group">
+                       <label class="form-label">Current Stock</label>
+                       <input type="number" id="newMedicationStock" class="form-input" min="1" required>
+                   </div>
+               </div>
+           </div>
+           <div class="form-row">
+               <div class="form-column">
+                   <div class="form-group">
+                       <label class="form-label">Threshold</label>
+                       <input type="number" id="newMedicationThreshold" class="form-input" min="1" required>
+                   </div>
+               </div>
+               <div class="form-column">
+                   <div class="form-group">
+                       <label class="form-label">Expiry Date</label>
+                       <input type="date" id="newMedicationExpiry" class="form-input" required>
+                   </div>
+               </div>
+           </div>
+           <div class="form-actions">
+               <button type="submit" class="btn-submit">Add Medication</button>
+           </div>
+       </form>
+   </div>
          <div class="dashboard">
              <div class="main-content">
                  <h2 class="section-title">Inventory Status</h2>
